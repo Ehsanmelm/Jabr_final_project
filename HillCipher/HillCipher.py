@@ -1,7 +1,7 @@
 def matrix_inverse(matrix):
 
     rows, cols = len(matrix), len(matrix[0])
-    if rows != cols:
+    if rows != cols: 
         raise ValueError("Matrix is not square.")
     
     augmented_matrix = []
