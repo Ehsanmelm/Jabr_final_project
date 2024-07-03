@@ -94,8 +94,18 @@ def decrypt(ciphertext,key):
     
     return decrypted_message
 
-msg = input("Enter the message for encryption: ")
-key = [[1, 2], [1, 3]] 
+# key = [[1, 2], [1, 3]]
+
+dim_num = int(input())
+key = []
+for i in range(dim_num):
+    arr = list(map(float , input().split()))
+    key.append(arr)
+
+msg = input("")
+
+
+# det = laplas_diag_method(matrix)
 # key = [[9, 8], [10, 9]] 
 
 encrypted_message = encrypt(msg, key)
