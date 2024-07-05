@@ -36,5 +36,5 @@ for i in range(dim_num):
     matrix.append(arr)
 
 det = laplas_diag_method(matrix)
-print(f"{det:.2f}")
+print(int(det))
 

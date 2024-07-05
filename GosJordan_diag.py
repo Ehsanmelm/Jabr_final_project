@@ -41,4 +41,4 @@ for i in range(dim_num):
     matrix.append(arr)
 
 diag = GosJordan_diag(matrix)
-print(f"{diag:.2f}")
+print(f"{int(diag)}")
