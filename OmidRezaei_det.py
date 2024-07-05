@@ -33,7 +33,7 @@ def determinant(matrix, x0, y0, xn, yn) -> float:
     cache[key] = result
     return result
 
-# sample_matrix = [[1.2, 4.1, 14.8, 1.0, 1.2],
+# matrix = [[1.2, 4.1, 14.8, 1.0, 1.2],
 #                 [6.4, 1.3, 1.6, 1.8, 2.4],
 #                 [3.5, 1.8, 8.2, 4.6, 3.8],
 #                 [9.1, 5.7, 2.6, 2.4, 4.6],
@@ -47,4 +47,4 @@ if __name__ == "__main__":
         input_list = list(map(float , input().split()))
         matrix.append(input_list)
         
-    print("{:.2f}".format(determinant(matrix, 0, 0, dim_num, dim_num)))
+    print("{}".format(int(determinant(matrix, 0, 0, dim_num, dim_num))))
