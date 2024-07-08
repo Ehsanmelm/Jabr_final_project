@@ -1,33 +1,5 @@
 from copy import deepcopy
 
-def GosJordan_diag(matrix, eps=1e-12):
-    diag = 1
-    copy_matrix = deepcopy(matrix)
-
-    row, col = len(matrix), len(matrix[0])
-
-    for i in range(min(row, col)):
-        main_element = copy_matrix[i][i]
-
-        if abs(main_element) < eps:
-            return 0.0
-
-        diag *= main_element
-
-        for j in range(len(copy_matrix[i])):
-            copy_matrix[i][j] /= main_element
-
-        for j in range(row):
-            if j != i:
-                factor = copy_matrix[j][i]
-                for k in range(len(copy_matrix[j])):
-                    copy_matrix[j][k] -= factor * copy_matrix[i][k]
-
-    for i in range(row):
-        diag *= copy_matrix[i][i]
-
-    return diag
-
 def laplas_diag_method(matrix):
     n = len(matrix)
     for i in range(n):
@@ -115,7 +87,7 @@ def hillcypher_decrypt(encoded_text, key):
     return decoded_text
 
 def is_valid_key(key):
-    det = int(GosJordan_diag(key))
+    det = laplas_diag_method(key)
     return det != 0
   
 if __name__ == "__main__":
