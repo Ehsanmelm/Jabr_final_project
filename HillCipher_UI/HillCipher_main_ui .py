@@ -1,9 +1,66 @@
 import sys
+from copy import deepcopy
 from PyQt5.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout, QHBoxLayout, QPushButton, QTextEdit 
 from PyQt5.QtGui import QFont
-from key_creator import key_matrix_creator
 import numpy as np
 
+def laplas_diag_method(matrix):
+    n = len(matrix)
+    for i in range(n):
+        if matrix[i][i] == 0:
+            return 0
+        
+    if n == 2:
+        return matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0]
+
+    elif n == 1:
+        return matrix[0][0]
+
+    det = 0
+    for j in range(n):
+        sub_matrix = [row[:j] + row[j+1:] for row in matrix[1:]]
+        sign = (-1) ** (j % 2)
+        sub_det = laplas_diag_method(sub_matrix)
+        det += sign * matrix[0][j] * sub_det
+
+    return det
+
+def get_minor_matrix(matrix, i, j):
+    minor = deepcopy(matrix)
+    del minor[i]
+    for row in minor:
+        del row[j]
+    return minor
+
+def get_inverse_key(key):
+    determinant = laplas_diag_method(key)
+
+    if determinant == 0:
+        return None  
+
+    key_length = len(key)
+    d = 1
+    while ((d * determinant) % 27 != 1):
+        d += 1
+        
+    if key_length == 2:
+        adjugate_matrix = [[(key[1][1] * d) % 27, (-1 * key[0][1] * d) % 27],
+                           [(-1 * key[1][0] * d) % 27, (key[0][0] * d) % 27]]
+        return adjugate_matrix
+
+    adjugate_matrix = [[0] * key_length for _ in range(key_length)]
+
+    for i in range(key_length):
+        for j in range(key_length):
+            minor = get_minor_matrix(key, i, j)
+            minor_determinant = laplas_diag_method(minor)
+            cofactor = (-1) ** (i + j) * minor_determinant
+            adjugate_matrix[j][i] = cofactor
+
+    inverse_key = [[(adjugate_matrix[i][j] * d) % 27 for j in range(key_length)] for i in range(key_length)]
+
+    return inverse_key
+    
 
 class EncryptionApp(QWidget):
     def __init__(self):
@@ -76,49 +133,16 @@ class EncryptionApp(QWidget):
 
         self.setStyleSheet("background-color: gray;")
 
-    # def matrix_to_letter(self, matrix):
-    #     encrypted_string = ''
-    #     for row in matrix:
-    #         for num in row:
-    #             encrypted_string += chr(num + 97)
-    #     return encrypted_string
-
-    # def encrypt(self):
-    #     inputtext = self.inputtext_textedit.toPlainText()
-
-    #     # key = np.array([[1, 2], [1, 3]])
-    #     key = np.array([[9, 8], [10, 9]])
-
-    #     word_list = inputtext.split(" ")
-    #     encrypted_message = ''
-
-    #     for word in word_list:
-    #         length = len(word)
-    #         if length % 2 != 0:
-    #             word += 'a'
-    #         else:
-    #             pass
-    #         encrypted_matrix = []
-    #         for i in range(0, len(word), 2):
-    #             l = []
-    #             try:
-    #                 l += [ord(word[i]) - 97, ord(word[i + 1]) - 97]
-    #             except:
-    #                 l += [ord(word[i]) - 97, 0]
-    #             c = np.matmul(key, l)
-    #             encrypted_matrix.append(c % 26)
-
-    #         encrypted_message += " " + self.matrix_to_letter(encrypted_matrix)
 
     def encrypt(self):
 
-        message = inputtext = self.inputtext_textedit.toPlainText()
+        message = self.inputtext_textedit.toPlainText()
         key = [[6,24,1],[13,16,8],[10,2,1]]
 
         message = message.upper().replace(' ', '_')
+
         key_length = len(key)
         encrypted_message = ""
-
         if len(message) % key_length != 0:
             message += 'X' * (key_length - (len(message) % key_length))
 
@@ -133,46 +157,45 @@ class EncryptionApp(QWidget):
             encrypted_block = ''.join(chr(val[0] + ord('A')) if val[0] != 26 else '_' for val in encrypted_vector)
             encrypted_message += encrypted_block + ' '
 
-        self.encrypted_textedit.setPlainText(encrypted_message.strip())
-
-        # return encrypted_message.strip()
-
-
-
-    def decrypt(self):
-        encrypted_text = self.encrypted_textedit.toPlainText()
-        # key = np.array([[1, 2], [1, 3]])
-        # key = np.array([[9, 8], [10, 9]])
-
-        # key = np.array([[9, 8], [7, 7]])
-        key = [[6,24,1],[13,16,8],[10,2,1]]
+        self.encrypted_textedit.setPlainText(encrypted_message.strip().replace(" " , ''))
 
         
-        key = np.linalg.inv(key).astype(int)
 
-        word_list = encrypted_text.split(" ")
-        decrypted_message = ''
+    def decrypt(self, key):
+        encoded_text = self.encrypted_textedit.toPlainText().replace(' ', '')
 
-        for word in word_list:
-            length = len(word)
-            decrypted_matrix = []
-            for i in range(0, len(word), 2):
-                l = []
-                try:
-                    l += [ord(word[i]) - 97, ord(word[i + 1]) - 97]
-                except:
-                    l += [ord(word[i]) - 97, 0]
-                c = np.matmul(key, l)
-                decrypted_matrix.append(c % 26)
+        key = [[6,24,1],[13,16,8],[10,2,1]]
+        key = get_inverse_key(key)
 
-            decrypted_message += " " + self.matrix_to_letter(decrypted_matrix)[0:length]
-            print(self.inputtext_textedit.toPlainText())
-            if len(decrypted_message) > len(self.inputtext_textedit.toPlainText()) and decrypted_message[-1] == 'a':
-                decrypted_message = decrypted_message[ : -1]
+        blocks = []
+        dim = len(key)
+        for i in range(int(len(encoded_text)/dim)):
+            blocks.append([])
+            for c in encoded_text[dim * i:dim * (i + 1)]:
+                code = ord(c) - ord('A')
+                if code <= 25:
+                    blocks[i].append(code)
+                else:
+                    blocks[i].append(26)
+        
+        decoded_text = ""
+        for i in range(len(blocks)):
+            temp = [0] * dim
+            for j in range(dim):
+                for k in range(dim):
+                    temp[j] += blocks[i][k] * key[j][k]
 
-
+            for n in temp:
+                code = n % 27
+                if code <= 25:
+                    decoded_text += chr(ord('A') + code)
+                else:
+                    decoded_text += "_"
+                        
         self.decrypt_textedit.show() 
-        self.decrypt_textedit.setPlainText(decrypted_message.strip())
+        self.decrypt_textedit.setPlainText(decoded_text.strip())
+
+
 
 
 if __name__ == '__main__':

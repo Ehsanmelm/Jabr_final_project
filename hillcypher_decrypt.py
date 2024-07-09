@@ -98,7 +98,7 @@ if __name__ == "__main__":
         matrix.append(input_list)
     
     text = input("")
-    
+    print(text)
     if is_valid_key(matrix):
         key = get_inverse_key(matrix)
         print(hillcypher_decrypt(text, key))

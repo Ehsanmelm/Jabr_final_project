@@ -32,6 +32,7 @@ def GosJordan_diag(matrix, eps=1e-12):
 
 def encrypt_hillcipher(message, key):
     message = message.upper().replace(' ', '_')
+    
     key_length = len(key)
     encrypted_message = ""
 
